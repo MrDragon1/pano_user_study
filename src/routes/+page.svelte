@@ -1,185 +1,293 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import { surveyData } from '$lib/data';
-    import type { SurveyGroup, PanoramaImage, ShuffledStore } from '$lib/types';
-    import PanoramaViewer from '$lib/PanoramaViewer.svelte';
-  
+    import { onMount } from "svelte";
+    import { surveyData } from "$lib/data";
+    import PanoramaViewer from "$lib/PanoramaViewer.svelte";
+
     // --- 状态管理 ---
     let activeGroupIndex = 0;
-    let currentImgIndex = 0;
-    let shuffledStore: ShuffledStore = {};
-    
-    /** * 修复核心：使用扁平化存储 
-     * 结构如: { "groupA|q1": "图像 1", "groupA|q2": "图像 2" }
-     */
-    let allAnswers: Record<string, string> = {};
-  
-    // --- 初始化：洗牌逻辑 ---
+    let shuffledStore: Record<string, any[]> = {};
+    let allAnswers: Record<string, string> = {}; // 存储所有答案
+    let viewerRefs: any[] = []; // 存储当前场景的 Viewer 实例引用
+    let isSubmitting = false;
+    const apiUrl = import.meta.env.VITE_API_URL;
+    // 洗牌逻辑
     function shuffle<T>(array: T[]): T[] {
-      return [...array].sort(() => Math.random() - 0.5);
+        return [...array].sort(() => Math.random() - 0.5);
     }
-  
+
     onMount(() => {
-      const store: ShuffledStore = {};
-      surveyData.forEach(group => {
-        store[group.id] = shuffle(group.images);
-      });
-      shuffledStore = store;
+        const store: Record<string, any[]> = {};
+        const initialAnswers: Record<string, string> = {};
+
+        surveyData.forEach((group) => {
+            // 1. 初始化每个场景的图片顺序
+            store[group.id] = shuffle(group.images);
+            // 2. 预初始化所有答案键名 (格式: "场景ID|问题ID")
+            group.questions.forEach((q) => {
+                initialAnswers[`${group.id}|${q.id}`] = "";
+            });
+        });
+
+        shuffledStore = store;
+        allAnswers = initialAnswers;
     });
-  
-    // --- 计算属性 ---
+
+    // --- 响应式变量 ---
     $: activeGroup = surveyData[activeGroupIndex];
-    $: currentShuffledImages = (activeGroup && shuffledStore[activeGroup.id]) ? shuffledStore[activeGroup.id] : [];
-    
-    // 检查特定场景是否完成（反应式函数）
+    $: currentImages =
+        activeGroup && shuffledStore[activeGroup.id]
+            ? shuffledStore[activeGroup.id]
+            : [];
+
+    // 检查特定场景是否完成
     $: isGroupComplete = (groupId: string) => {
-      const group = surveyData.find(g => g.id === groupId);
-      if (!group) return false;
-      // 检查该组下所有问题是否在 allAnswers 中都有值
-      return group.questions.every(q => allAnswers[`${groupId}|${q.id}`]);
+        const group = surveyData.find((g) => g.id === groupId);
+        if (!group) return false;
+        return group.questions.every(
+            (q) => allAnswers[`${groupId}|${q.id}`] !== "",
+        );
     };
-  
-    // 修复核心：检查全局是否完成的反应式声明
-    $: finishedGroupsCount = surveyData.filter(g => isGroupComplete(g.id)).length;
-    $: isAllFinished = finishedGroupsCount === surveyData.length;
-  
-    // --- 行为逻辑 ---
+
+    // 全局进度计算
+    $: finishedCount = surveyData.filter((g) => isGroupComplete(g.id)).length;
+    $: progressPercent = Math.round((finishedCount / surveyData.length) * 100);
+
+    // --- 视角同步逻辑 ---
+    function handleSync(event: CustomEvent) {
+        const { yaw, pitch, hfov, originId } = event.detail;
+
+        // 遍历 viewerRefs 数组，同步除操作源以外的所有图
+        viewerRefs.forEach((vInstance, idx) => {
+            if (vInstance && idx.toString() !== originId) {
+                vInstance.setView(yaw, pitch, hfov);
+            }
+        });
+    }
+
+    // --- 场景切换行为 ---
     function switchGroup(index: number) {
-      activeGroupIndex = index;
-      currentImgIndex = 0;
+        // 在切换前，可以尝试遍历旧的引用并手动销毁
+        viewerRefs.forEach((v) => {
+            if (v && v.destroy) v.destroy();
+        });
+
+        activeGroupIndex = index;
+        viewerRefs = [];
     }
-  
-    function handleFinalSubmit() {
-      const finalReport = surveyData.map(group => {
-        return {
-          scene: group.name,
-          sceneId: group.id,
-          results: group.questions.map(q => {
-            const label = allAnswers[`${group.id}|${q.id}`];
-            const idx = parseInt(label.replace('图像 ', '')) - 1;
-            return {
-              questionId: q.id,
-              selectedFile: shuffledStore[group.id][idx].id
-            };
-          })
+
+    async function handleFinalSubmit() {
+        if (isSubmitting) return; // 二重保险，防止函数被意外多次触发
+        isSubmitting = true;
+        // 1. 构建最终数据对象（包含原始文件名映射）
+        const finalResults: Record<string, any> = {
+            timestamp: new Date().toISOString(),
+            responses: {},
         };
-      });
-  
-      console.log("=== 问卷测试结果输出 ===");
-      console.table(finalReport.flatMap(g => g.results.map(r => ({...r, scene: g.scene}))));
-      alert("测试成功！结果已输出至控制台。");
+
+        Object.entries(allAnswers).forEach(([key, selectedValue]) => {
+            const [groupId, qId] = key.split("|");
+            const index = parseInt(selectedValue.split(" ")[1]) - 1;
+            const shuffledImages = shuffledStore[groupId];
+
+            if (shuffledImages && shuffledImages[index]) {
+                const realFileName = shuffledImages[index].url.split("/").pop();
+                finalResults.responses[key] = {
+                    fileName: realFileName,
+                };
+            }
+        });
+
+        // 2. 发送 POST 请求到你的服务器
+        try {
+            const response = await fetch(
+                apiUrl,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(finalResults),
+                },
+            );
+
+            if (response.ok) {
+                await response.json();
+                alert("提交成功！感谢参与。");
+            } else {
+                throw new Error(
+                    "服务器响应异常" + (response.json() || "未知错误"),
+                );
+            }
+        } catch (error) {
+            console.error("提交失败:", error);
+            alert("提交失败，请稍后重试。");
+            isSubmitting = false;
+        } finally {
+            isSubmitting = false;
+        }
     }
-  </script>
-  
-  <main class="app-container">
-    <nav class="progress-bar">
-      {#each surveyData as group, i}
-        <button 
-          class="nav-item" 
-          class:active={activeGroupIndex === i}
-          class:completed={isGroupComplete(group.id)}
-          on:click={() => switchGroup(i)}
+</script>
+
+<main class="min-h-screen bg-slate-50 p-4 text-slate-900">
+    <header class="max-w-4/5 mx-auto mb-4">
+        <div
+            class="flex items-center gap-4 bg-white/90 backdrop-blur-md p-2 rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
         >
-          <span class="status-icon">
-            {#if isGroupComplete(group.id)} ✓ {:else} {i + 1} {/if}
-          </span>
-          <span class="nav-label">{group.name}</span>
-        </button>
-      {/each}
-    </nav>
-  
-    {#if activeGroup && currentShuffledImages.length > 0}
-      <div class="main-layout">
-        <section class="viewer-section">
-          <div class="viewer-card">
-            {#key currentShuffledImages[currentImgIndex].url}
-              <PanoramaViewer imageUrl={currentShuffledImages[currentImgIndex].url} />
-            {/key}
-            
-            <div class="image-switcher">
-              <span class="hint">切换观察图像：</span>
-              <div class="btn-group">
-                {#each currentShuffledImages as _, i}
-                  <button 
-                    class:active={currentImgIndex === i}
-                    on:click={() => currentImgIndex = i}
-                  >
-                    图像 {i + 1}
-                  </button>
+            <nav class="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                {#each surveyData as group, i}
+                    {@const completed = isGroupComplete(group.id)}
+                    <button
+                        on:click={() => switchGroup(i)}
+                        class="flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 whitespace-nowrap
+                        {activeGroupIndex === i
+                            ? 'bg-slate-900 text-white shadow-lg'
+                            : 'hover:bg-white text-slate-400'}"
+                    >
+                        <span
+                            class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border
+                            {completed
+                                ? 'bg-emerald-500 border-emerald-500 text-white'
+                                : activeGroupIndex === i
+                                  ? 'bg-white text-slate-900'
+                                  : 'border-slate-300'}"
+                        >
+                            {completed ? "✓" : i + 1}
+                        </span>
+                        <span class="text-sm font-bold">{group.name}</span>
+                    </button>
                 {/each}
-              </div>
-            </div>
-          </div>
-        </section>
-  
-        <aside class="survey-section">
-          <div class="section-title">
-            <h2>{activeGroup.name} - 问卷</h2>
-            <p class="desc">请根据观察，在下方选择最符合的图像编号</p>
-          </div>
-  
-          {#each activeGroup.questions as q}
-            <div class="q-card">
-              <p class="q-text">{q.text}</p>
-              <div class="radio-group">
-                {#each currentShuffledImages as _, i}
-                  {@const val = `图像 ${i + 1}`}
-                  <label class="radio-tile">
-                    <input 
-                      type="radio" 
-                      bind:group={allAnswers[`${activeGroup.id}|${q.id}`]} 
-                      value={val} 
-                    />
-                    <span class="tile-label">{val}</span>
-                  </label>
-                {/each}
-              </div>
-            </div>
-          {/each}
-  
-          <div class="submit-area">
-            {#if isAllFinished}
-              <button class="btn-submit primary" on:click={handleFinalSubmit}>
-                提交全部场景问卷
-              </button>
-            {:else}
-              <button class="btn-submit disabled" disabled>
-                请完成所有场景 (目前: {finishedGroupsCount}/{surveyData.length})
-              </button>
-            {/if}
-          </div>
-        </aside>
-      </div>
+            </nav>
+        </div>
+    </header>
+
+    {#if activeGroup && currentImages.length > 0}
+        <div class="    max-w-4/5 mx-auto flex flex-col gap-8">
+            <section class="w-full space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {#key activeGroup.id}
+                        {#each currentImages as img, i}
+                            <div
+                                class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 transition-all hover:shadow-md"
+                            >
+                                <PanoramaViewer
+                                    bind:this={viewerRefs[i]}
+                                    id={i.toString()}
+                                    imageUrl={img.url}
+                                    on:sync={handleSync}
+                                />
+                                <div class="mt-2 text-center">
+                                    <span
+                                        class="text-xs font-black text-slate-400 uppercase tracking-widest"
+                                        >选项{i + 1}</span
+                                    >
+                                </div>
+                            </div>
+                        {/each}
+                    {/key}
+                </div>
+            </section>
+
+            <aside class="w-full">
+                {#key activeGroup.id}
+                    <div
+                        class="bg-white p-2 rounded-[2.5rem] shadow-xl shadow-blue-900/5 border border-slate-100"
+                    >
+                        <div
+                            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12"
+                        >
+                            {#each activeGroup.questions as q (q.id)}
+                                <div
+                                    class="space-y-2 flex flex-col justify-between"
+                                >
+                                    <div class="flex items-start gap-3">
+                                        <div
+                                            class="w-1.2 h-5 bg-blue-600 rounded-full shrink-0"
+                                        ></div>
+                                        <p
+                                            class="font-extrabold text-lg text-slate-800 leading-tight"
+                                        >
+                                            {q.text}
+                                        </p>
+                                    </div>
+
+                                    <div class="grid grid-cols-3 gap-2">
+                                        {#each currentImages as _, i}
+                                            {@const val = `图像 ${i + 1}`}
+                                            {@const answerKey = `${activeGroup.id}|${q.id}`}
+                                            <label
+                                                class="relative cursor-pointer group"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    class="hidden peer"
+                                                    name={answerKey}
+                                                    bind:group={
+                                                        allAnswers[answerKey]
+                                                    }
+                                                    value={val}
+                                                />
+                                                <div
+                                                    class="py-3 px-2 text-center rounded-xl border-2 border-slate-50 bg-slate-50
+                                                    transition-all duration-300 font-black text-slate-400 text-sm
+                                                    peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white
+                                                    group-hover:border-slate-200"
+                                                >
+                                                    {i + 1}
+                                                </div>
+                                            </label>
+                                        {/each}
+                                    </div>
+                                </div>
+                            {/each}
+                        </div>
+
+                        <div
+                            class="mt-2 pt-2 border-t border-slate-100 flex justify-center"
+                        >
+                            {#if finishedCount === surveyData.length}
+                                <button
+                                    on:click={handleFinalSubmit}
+                                    disabled={isSubmitting}
+                                    class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-lg transition-all
+                            {isSubmitting
+                                        ? 'opacity-50 cursor-not-allowed'
+                                        : 'hover:bg-blue-600 hover:-translate-y-1 active:scale-95'} 
+                            shadow-2xl shadow-blue-900/20"
+                                >
+                                    {#if isSubmitting}
+                                        正在提交，请稍候...
+                                    {:else}
+                                        提交所有问卷
+                                    {/if}
+                                </button>
+                            {:else}
+                                <button
+                                    disabled
+                                    class="px-8 py-4 bg-slate-100 text-slate-300 rounded-2xl font-black text-lg cursor-not-allowed border-2 border-dashed border-slate-200"
+                                >
+                                    请回答所有问题以继续
+                                </button>
+                            {/if}
+                        </div>
+                    </div>
+                {/key}
+            </aside>
+        </div>
     {/if}
-  </main>
-  
-  <style>
-    /* 保持原有样式不变 */
-    :global(body) { background-color: #f0f2f5; margin: 0; font-family: sans-serif; }
-    .app-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-    .progress-bar { display: flex; gap: 10px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .nav-item { flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px; border: 2px solid #eee; border-radius: 8px; background: none; cursor: pointer; transition: all 0.2s; }
-    .nav-item.active { border-color: #3498db; background: #ebf5ff; }
-    .nav-item.completed { border-color: #2ecc71; color: #27ae60; }
-    .status-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: #eee; border-radius: 50%; font-size: 12px; font-weight: bold; }
-    .completed .status-icon { background: #2ecc71; color: white; }
-    .main-layout { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
-    .viewer-card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .image-switcher { margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
-    .btn-group { display: flex; gap: 8px; margin-top: 10px; }
-    .btn-group button { padding: 8px 16px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; }
-    .btn-group button.active { background: #3498db; color: white; border-color: #3498db; }
-    .survey-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .q-card { margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px dashed #eee; }
-    .q-text { font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; color: #2c3e50; }
-    .radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .radio-tile { display: block; position: relative; cursor: pointer; }
-    .radio-tile input { position: absolute; opacity: 0; }
-    .tile-label { display: block; padding: 10px; text-align: center; border: 1px solid #ddd; border-radius: 6px; transition: all 0.2s; background: #fdfdfd; }
-    .radio-tile input:checked + .tile-label { background: #3498db; color: white; border-color: #3498db; transform: scale(1.02); }
-    .submit-area { margin-top: 30px; }
-    .btn-submit { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
-    .primary { background: #2ecc71; color: white; transition: background 0.3s; }
-    .primary:hover { background: #27ae60; }
-    .disabled { background: #bdc3c7; color: #ecf0f1; cursor: not-allowed; }
-  </style>
+</main>
+
+<style>
+    :global(body) {
+        background-color: #f8fafc;
+    }
+    :global(.no-scrollbar)::-webkit-scrollbar {
+        display: none;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+    }
+</style>

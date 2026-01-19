@@ -1,7 +1,6 @@
 export interface PanoramaImage {
   id: string;    // 原始文件名
   url: string;
-  title: string;
 }
 
 export interface Question {
