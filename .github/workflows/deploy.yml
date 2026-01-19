@@ -2,12 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: 'main' # 只有推送到主分支才触发
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+    branches: 'main'
 
 jobs:
   build_site:
@@ -16,23 +11,43 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm i
 
-      - name: Build
-        run: npm run build
-        env:
+      - name: build
+        env: 
           VITE_API_URL: ${{ secrets.API_URL }}
+        run: 
+          pnpm run build
 
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'build/'
+  deploy:
+    needs: build_site
+    runs-on: ubuntu-latest
 
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
       - name: Deploy
+        id: deployment
         uses: actions/deploy-pages@v4
