@@ -99,16 +99,13 @@
 
         // 2. 发送 POST 请求到你的服务器
         try {
-            const response = await fetch(
-                apiUrl,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(finalResults),
+            const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
                 },
-            );
+                body: JSON.stringify(finalResults),
+            });
 
             if (response.ok) {
                 await response.json();
@@ -244,28 +241,36 @@
                         <div
                             class="mt-2 pt-2 border-t border-slate-100 flex justify-center"
                         >
-                            {#if finishedCount === surveyData.length}
+                            {#if !isGroupComplete(activeGroup.id)}
+                                <button
+                                    disabled
+                                    class="px-8 py-4 bg-slate-100 text-slate-300 rounded-2xl font-black text-lg cursor-not-allowed border-2 border-dashed border-slate-200"
+                                >
+                                    请回答所有问题以继续
+                                </button>
+                            {:else if activeGroupIndex < surveyData.length - 1}
+                                <button
+                                    on:click={() =>
+                                        switchGroup(activeGroupIndex + 1)}
+                                    class="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-lg transition-all hover:bg-blue-700 hover:-translate-y-1 active:scale-95 shadow-xl shadow-blue-900/20"
+                                >
+                                    下一页
+                                </button>
+                            {:else if finishedCount === surveyData.length}
                                 <button
                                     on:click={handleFinalSubmit}
                                     disabled={isSubmitting}
                                     class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-lg transition-all
-                            {isSubmitting
+                                {isSubmitting
                                         ? 'opacity-50 cursor-not-allowed'
-                                        : 'hover:bg-blue-600 hover:-translate-y-1 active:scale-95'} 
-                            shadow-2xl shadow-blue-900/20"
+                                        : 'hover:bg-emerald-600 hover:-translate-y-1 active:scale-95'} 
+                                shadow-2xl shadow-blue-900/20"
                                 >
                                     {#if isSubmitting}
                                         正在提交，请稍候...
                                     {:else}
                                         提交所有问卷
                                     {/if}
-                                </button>
-                            {:else}
-                                <button
-                                    disabled
-                                    class="px-8 py-4 bg-slate-100 text-slate-300 rounded-2xl font-black text-lg cursor-not-allowed border-2 border-dashed border-slate-200"
-                                >
-                                    请回答所有问题以继续
                                 </button>
                             {/if}
                         </div>

@@ -13,7 +13,7 @@ export const surveyData: SurveyGroup[] = [
       { id: 'p6', url: 'flux_00029_03005_221847.jpg' },
     ],
     questions: [
-      { id: 'q1', text: '请选择色彩过渡和光影最自然的场景' },
+      { id: 'q1', text: '请选择画面整体风格最一致的场景' },
       { id: 'q2', text: '请选择纹理细节最清晰丰富的场景' },
       { id: 'q3', text: '请选择拉伸畸变（扭曲）感最轻微的场景' },
       { id: 'q4', text: '综合来看，请选择整体视觉质量最高的场景' }
@@ -31,7 +31,7 @@ export const surveyData: SurveyGroup[] = [
       { id: 'p6', url: 'flux_00205_03029_1001143.jpg' },
     ],
     questions: [
-      { id: 'q1', text: '请选择色彩过渡和光影最自然的场景' },
+      { id: 'q1', text: '请选择画面整体风格最一致的场景' },
       { id: 'q2', text: '请选择纹理细节最清晰丰富的场景' },
       { id: 'q3', text: '请选择拉伸畸变（扭曲）感最轻微的场景' },
       { id: 'q4', text: '综合来看，请选择整体视觉质量最高的场景' }
@@ -49,7 +49,7 @@ export const surveyData: SurveyGroup[] = [
       { id: 'p6', url: 'flux_00653_03089_682.jpg' },
     ],
     questions: [
-      { id: 'q1', text: '请选择色彩过渡和光影最自然的场景' },
+      { id: 'q1', text: '请选择画面整体风格最一致的场景' },
       { id: 'q2', text: '请选择纹理细节最清晰丰富的场景' },
       { id: 'q3', text: '请选择拉伸畸变（扭曲）感最轻微的场景' },
       { id: 'q4', text: '综合来看，请选择整体视觉质量最高的场景' }
@@ -67,7 +67,7 @@ export const surveyData: SurveyGroup[] = [
       { id: 'p6', url: 'flux_02315_030541.jpg' },
     ],
     questions: [
-      { id: 'q1', text: '请选择色彩过渡和光影最自然的场景' },
+      { id: 'q1', text: '请选择画面整体风格最一致的场景' },
       { id: 'q2', text: '请选择纹理细节最清晰丰富的场景' },
       { id: 'q3', text: '请选择拉伸畸变（扭曲）感最轻微的场景' },
       { id: 'q4', text: '综合来看，请选择整体视觉质量最高的场景' }
@@ -85,7 +85,7 @@ export const surveyData: SurveyGroup[] = [
       { id: 'p6', url: 'flux_03075_031301.jpg' },
     ],
     questions: [
-      { id: 'q1', text: '请选择色彩过渡和光影最自然的场景' },
+      { id: 'q1', text: '请选择画面整体风格最一致的场景' },
       { id: 'q2', text: '请选择纹理细节最清晰丰富的场景' },
       { id: 'q3', text: '请选择拉伸畸变（扭曲）感最轻微的场景' },
       { id: 'q4', text: '综合来看，请选择整体视觉质量最高的场景' }
@@ -103,7 +103,7 @@ export const surveyData: SurveyGroup[] = [
       { id: 'p6', url: 'flux_02442_030668.jpg' },
     ],
     questions: [
-      { id: 'q1', text: '请选择色彩过渡和光影最自然的场景' },
+      { id: 'q1', text: '请选择画面整体风格最一致的场景' },
       { id: 'q2', text: '请选择纹理细节最清晰丰富的场景' },
       { id: 'q3', text: '请选择拉伸畸变（扭曲）感最轻微的场景' },
       { id: 'q4', text: '综合来看，请选择整体视觉质量最高的场景' }
@@ -121,7 +121,7 @@ export const surveyData: SurveyGroup[] = [
       { id: 'p6', url: 'flux_2.jpg' },
     ],
     questions: [
-      { id: 'q1', text: '请选择色彩过渡和光影最自然的场景' },
+      { id: 'q1', text: '请选择画面整体风格最一致的场景' },
       { id: 'q2', text: '请选择纹理细节最清晰丰富的场景' },
       { id: 'q3', text: '请选择拉伸畸变（扭曲）感最轻微的场景' },
       { id: 'q4', text: '综合来看，请选择整体视觉质量最高的场景' }
@@ -139,7 +139,7 @@ export const surveyData: SurveyGroup[] = [
       { id: 'p6', url: 'flux_52939.jpg' },
     ],
     questions: [
-      { id: 'q1', text: '请选择色彩过渡和光影最自然的场景' },
+      { id: 'q1', text: '请选择画面整体风格最一致的场景' },
       { id: 'q2', text: '请选择纹理细节最清晰丰富的场景' },
       { id: 'q3', text: '请选择拉伸畸变（扭曲）感最轻微的场景' },
       { id: 'q4', text: '综合来看，请选择整体视觉质量最高的场景' }
