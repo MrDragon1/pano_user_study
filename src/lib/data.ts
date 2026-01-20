@@ -5,7 +5,7 @@ export const surveyData: SurveyGroup[] = [
     id: 'group-1',
     name: '场景1',
     images: [
-      { id: 'p1', url: 'v7_00029_03005_221847.jpg' },
+      { id: 'p1', url: 'ours_00029_03005_221847.jpg' },
       { id: 'p2', url: 'dreamcube_00029_03005_221847.jpg' },
       { id: 'p3', url: 'panodiff_00029_03005_221847.jpg' },
       { id: 'p4', url: 'panodiffusion_00029_03005_221847.jpg' },
@@ -23,7 +23,7 @@ export const surveyData: SurveyGroup[] = [
     id: 'group-2',
     name: '场景2',
     images: [
-      { id: 'p1', url: 'v7_00205_03029_1001143.jpg' },
+      { id: 'p1', url: 'ours_00205_03029_1001143.jpg' },
       { id: 'p2', url: 'dreamcube_00205_03029_1001143.jpg' },
       { id: 'p3', url: 'panodiff_00205_03029_1001143.jpg' },
       { id: 'p4', url: 'panodiffusion_00205_03029_1001143.jpg' },
@@ -41,7 +41,7 @@ export const surveyData: SurveyGroup[] = [
     id: 'group-3',
     name: '场景3',
     images: [
-      { id: 'p1', url: 'v7_00653_03089_682.jpg' },
+      { id: 'p1', url: 'ours_00653_03089_682.jpg' },
       { id: 'p2', url: 'dreamcube_00653_03089_682.jpg' },
       { id: 'p3', url: 'panodiff_00653_03089_682.jpg' },
       { id: 'p4', url: 'panodiffusion_00653_03089_682.jpg' },
@@ -59,7 +59,7 @@ export const surveyData: SurveyGroup[] = [
     id: 'group-4',
     name: '场景4',
     images: [
-      { id: 'p1', url: 'v7_02315_030541.jpg' },
+      { id: 'p1', url: 'ours_02315_030541.jpg' },
       { id: 'p2', url: 'dreamcube_02315_030541.jpg' },
       { id: 'p3', url: 'panodiff_02315_030541.jpg' },
       { id: 'p4', url: 'panodiffusion_02315_030541.jpg' },
@@ -77,7 +77,7 @@ export const surveyData: SurveyGroup[] = [
     id: 'group-5',
     name: '场景5',
     images: [
-      { id: 'p1', url: 'v7_03075_031301.jpg' },
+      { id: 'p1', url: 'ours_03075_031301.jpg' },
       { id: 'p2', url: 'dreamcube_03075_031301.jpg' },
       { id: 'p3', url: 'panodiff_03075_031301.jpg' },
       { id: 'p4', url: 'panodiffusion_03075_031301.jpg' },
@@ -95,7 +95,7 @@ export const surveyData: SurveyGroup[] = [
     id: 'group-6',
     name: '场景6',
     images: [
-      { id: 'p1', url: 'v7_02442_030668.jpg' },
+      { id: 'p1', url: 'ours_02442_030668.jpg' },
       { id: 'p2', url: 'dreamcube_02442_030668.jpg' },
       { id: 'p3', url: 'panodiff_02442_030668.jpg' },
       { id: 'p4', url: 'panodiffusion_02442_030668.jpg' },
@@ -113,7 +113,7 @@ export const surveyData: SurveyGroup[] = [
     id: 'group-7',
     name: '场景7',
     images: [
-      { id: 'p1', url: 'v7_2.jpg' },
+      { id: 'p1', url: 'ours_2.jpg' },
       { id: 'p2', url: 'dreamcube_2.jpg' },
       { id: 'p3', url: 'panodiff_2.jpg' },
       { id: 'p4', url: 'panodiffusion_2.jpg' },
@@ -131,7 +131,7 @@ export const surveyData: SurveyGroup[] = [
     id: 'group-8',
     name: '场景8',
     images: [
-      { id: 'p1', url: 'v7_52939.jpg' },
+      { id: 'p1', url: 'ours_52939.jpg' },
       { id: 'p2', url: 'dreamcube_52939.jpg' },
       { id: 'p3', url: 'panodiff_52939.jpg' },
       { id: 'p4', url: 'panodiffusion_52939.jpg' },
