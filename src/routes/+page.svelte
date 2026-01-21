@@ -163,17 +163,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {#key activeGroup.id}
                         {#each currentImages as img, i}
-                            <div
-                                class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 transition-all hover:shadow-md"
-                            >
-                                <PanoramaViewer
-                                    bind:this={viewerRefs[i]}
-                                    id={i.toString()}
-                                    imageUrl={img.url}
-                                    on:sync={handleSync}
-                                />
-            
-                                <div class="mt-3 space-y-1">
+                            <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 transition-all hover:shadow-md flex flex-col">
+                                <div class="mb-4">
                                     <div class="relative group/thumb overflow-hidden rounded-xl border border-slate-200 bg-slate-100 w-4/5 mx-auto shadow-inner">
                                         <img 
                                             src={img.url} 
@@ -181,13 +172,21 @@
                                             class="w-full aspect-[2/1] object-cover block"
                                         />
                                     </div>
-                                    
-                                    <div class="text-center">
-                                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest">
-                                            选项 {i + 1}
-                                        </span>
-                                    </div>
                                 </div>
+                            
+                                <PanoramaViewer
+                                    bind:this={viewerRefs[i]}
+                                    id={i.toString()}
+                                    imageUrl={img.url}
+                                    on:sync={handleSync}
+                                />
+                            
+                                <div class="mt-2 text-center">
+                                    <span class="text-xs font-black text-slate-400 uppercase tracking-widest">
+                                        选项 {i + 1}
+                                    </span>
+                                </div>
+                            
                             </div>
                         {/each}
                     {/key}
