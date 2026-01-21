@@ -178,11 +178,8 @@
                                         <img 
                                             src={img.url} 
                                             alt="Full Panorama" 
-                                            class="w-full aspect-[2/1] object-cover"
+                                            class="w-4/5 aspect-[2/1] object-cover"
                                         />
-                                        <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
-                                            <span class="text-white text-[10px] font-bold">完整预览</span>
-                                        </div>
                                     </div>
                                     
                                     <div class="text-center">
