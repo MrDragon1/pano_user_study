@@ -172,18 +172,30 @@
                                     imageUrl={img.url}
                                     on:sync={handleSync}
                                 />
-                                <div class="mt-2 text-center">
-                                    <span
-                                        class="text-xs font-black text-slate-400 uppercase tracking-widest"
-                                        >选项{i + 1}</span
-                                    >
+            
+                                <div class="mt-3 space-y-1">
+                                    <div class="relative group/thumb overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
+                                        <img 
+                                            src={img.url} 
+                                            alt="Full Panorama" 
+                                            class="w-full aspect-[2/1] object-cover"
+                                        />
+                                        <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span class="text-white text-[10px] font-bold">完整预览</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-center">
+                                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest">
+                                            选项 {i + 1}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         {/each}
                     {/key}
                 </div>
             </section>
-
             <aside class="w-full">
                 {#key activeGroup.id}
                     <div
