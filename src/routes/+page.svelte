@@ -174,11 +174,11 @@
                                 />
             
                                 <div class="mt-3 space-y-1">
-                                    <div class="relative group/thumb overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
+                                    <div class="relative group/thumb overflow-hidden rounded-xl border border-slate-200 bg-slate-100 w-4/5 mx-auto shadow-inner">
                                         <img 
                                             src={img.url} 
-                                            alt="Full Panorama" 
-                                            class="w-4/5 aspect-[2/1] object-cover"
+                                            alt="Full Panorama Preview" 
+                                            class="w-full aspect-[2/1] object-cover block"
                                         />
                                     </div>
                                     
